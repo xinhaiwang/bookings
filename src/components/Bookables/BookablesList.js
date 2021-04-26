@@ -1,22 +1,66 @@
-import {bookables, sessions, days} from "../../static.json";
-import {Fragment, useState} from "react";
-import {FaArrowRight} from "react-icons/all";
+import {sessions, days} from "../../static.json";
+import {Fragment, useEffect, useReducer} from "react";
+import {FaArrowRight} from "react-icons/fa";
+import Spinner from "../UI/Spinner";
+import reducer from "./reducer";
+
+import getData from "../../utils/api";
+
+const initialState = {
+    group: "Rooms",
+    bookableIndex: 0,
+    hasDetails: true,
+    bookables: [],
+    isLoading: true,
+    error: false
+};
 
 export default function BookablesList () {
+    // when events occur in our application, instead of giving React new values to set,
+    // we dispatch an action, and React uses the corresponding code int the reducer to generate
+    // a new state before calling the component for the latest UI.
+   const [state, dispatch] = useReducer(reducer, initialState, (value) => value);
 
-    const [group, setGroup] = useState("Kit");
+   const {group, bookableIndex, bookables} = state;
+   const {hasDetails, isLoading, error} = state;
 
     const bookablesInGroup = bookables.filter(b => b.group === group);
-
-    const [bookableIndex, setBookableIndex] = useState(0);
-
-    const groups = [...new Set(bookables.map(b => b.group))];
 
     // There's no need to call useState to store the bookable object itself
     // because it can be derived from the index value already in state.
     const bookable = bookablesInGroup[bookableIndex];
 
-    const [hasDetails, setHasDetails] = useState(false);
+    const groups = [...new Set(bookables.map(b => b.group))];
+
+    useEffect(() => {
+        dispatch({type: "FETCH_BOOKABLES_REQUEST"});
+
+        getData("http://localhost:3001/bookables")
+            .then(bookables => dispatch({
+                type: "FETCH_BOOKABLES_SUCCESS",
+                payload: bookables
+            }))
+            .catch(error => dispatch({
+                type: "FETCH_BOOKABLES_ERROR",
+                payload: error
+            }))
+    }, []);
+
+
+    function changeGroup (event) {
+        dispatch({
+            type: "SET_GROUP",
+            payload: event.target.value
+        });
+    }
+
+    function changeBookable (selectedIndex) {
+        dispatch({
+            type: "SET_BOOKABLE",
+            payload: selectedIndex
+        });
+    }
+
 
     function nextBookable() {
         // In fact, to ensure that you have the latest state when setting new values based on old,
@@ -24,19 +68,31 @@ export default function BookablesList () {
 
         // React will pass that function the current state value and will use the return value
         // of that function as the new state value.
-        setBookableIndex((bookableIndex + 1) % bookablesInGroup.length);
+        dispatch({type: "NEXT_BOOKABLE"});
+    }
+
+    function  toggleDetails () {
+        dispatch({type: "TOGGLE_HAS_DETAILS"});
+    }
+
+    if (error) {
+        return <p>{error.message}</p>
+    }
+
+    if (isLoading) {
+        return <p><Spinner/> Loading bookables...</p>
     }
 
     return (
         <Fragment>
             <div>
-                <select value={group} onChange={(e) => setGroup(e.target.value)}>
+                <select value={group} onChange={changeGroup}>
                     {groups.map(g => <option value={g} key={g}>{g}</option>)}
                 </select>
                 <ul className="bookables items-list-nav">
                     {bookablesInGroup.map((b, i) => (
                         <li key={b.id} className={i === bookableIndex ? "selected": null}>
-                            <button className="btn" onClick={() => setBookableIndex(i)}>{b.title}</button>
+                            <button className="btn" onClick={() => changeBookable(i)}>{b.title}</button>
                         </li>
                     ))}
                 </ul>
@@ -53,7 +109,7 @@ export default function BookablesList () {
                             </h2>
                             <span className="controls">
                                 <label>
-                                    <input type="checkbox" checked={hasDetails} onChange={() => setHasDetails(has => !has)}/>
+                                    <input type="checkbox" checked={hasDetails} onChange={toggleDetails}/>
                                     Show Details
                                 </label>
                             </span>
