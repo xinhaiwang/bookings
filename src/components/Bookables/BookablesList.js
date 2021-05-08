@@ -1,66 +1,68 @@
-import {sessions, days} from "../../static.json";
-import {Fragment, useEffect, useReducer} from "react";
+import {useEffect, useRef, useState} from "react";
 import {FaArrowRight} from "react-icons/fa";
 import Spinner from "../UI/Spinner";
-import reducer from "./reducer";
 
 import getData from "../../utils/api";
 
-const initialState = {
-    group: "Rooms",
-    bookableIndex: 0,
-    hasDetails: true,
-    bookables: [],
-    isLoading: true,
-    error: false
-};
+export default function BookablesList ({bookable, setBookable}) {
+   // 1. Variables
+   // Assign the state and dispatch props to local variables.
+    const [bookables, setBookables] = useState([]);
+    const [error, setError] = useState(false);
+    const [isLoading, setIsLoading] = useState(true);
 
-export default function BookablesList () {
-    // when events occur in our application, instead of giving React new values to set,
-    // we dispatch an action, and React uses the corresponding code int the reducer to generate
-    // a new state before calling the component for the latest UI.
-   const [state, dispatch] = useReducer(reducer, initialState, (value) => value);
-
-   const {group, bookableIndex, bookables} = state;
-   const {hasDetails, isLoading, error} = state;
-
+    const group = bookable?.group;
     const bookablesInGroup = bookables.filter(b => b.group === group);
-
-    // There's no need to call useState to store the bookable object itself
-    // because it can be derived from the index value already in state.
-    const bookable = bookablesInGroup[bookableIndex];
-
     const groups = [...new Set(bookables.map(b => b.group))];
 
+    // const timerRef = useRef(null);
+
+    // We don't assign a initial value;
+    // we're going to get React to automatically assign a value to the nextButtonRef.current property for us.
+
+    // Once React has created the button element for the DOM, it assigns a reference to the element
+    // to the nextButtonRef.current property.
+    // const nextButtonRef = useRef();
+
+    // 2. Effect
     useEffect(() => {
-        dispatch({type: "FETCH_BOOKABLES_REQUEST"});
-
         getData("http://localhost:3001/bookables")
-            .then(bookables => dispatch({
-                type: "FETCH_BOOKABLES_SUCCESS",
-                payload: bookables
-            }))
-            .catch(error => dispatch({
-                type: "FETCH_BOOKABLES_ERROR",
-                payload: error
-            }))
-    }, []);
+            .then(bookables => {
+                setBookable(bookables[0]);
+                setBookables(bookables);
+                setIsLoading(false);
+            })
+            .catch(error => {
+                setError(error);
+                setIsLoading(false);
+            })
+    }, [setBookable]);
+
+    // useEffect(() => {
+    //
+    //     // Start an interval timer and assign its ID to the ref's current property.
+    //     timerRef.current = setInterval(() => {
+    //         dispatch({type: "NEXT_BOOKABLE"});
+    //     }, 3000);
+    //
+    //     return stopPresentation;
+    // }, []);
 
 
+    // We can use the ID to clear the timer if necessary.
+    // If the user clicks the Stop button or navigates to another page in the app.
+    // function stopPresentation() {
+    //     // Use the timer ID to clear the timer.
+    //     clearInterval(timerRef.current);
+    // }
+
+    // 3. Handler functions
     function changeGroup (event) {
-        dispatch({
-            type: "SET_GROUP",
-            payload: event.target.value
-        });
+        const bookablesInSelectedGroup = bookables.filter(
+            b => b.group === event.target.value
+        );
+        setBookable(bookablesInSelectedGroup[0]);
     }
-
-    function changeBookable (selectedIndex) {
-        dispatch({
-            type: "SET_BOOKABLE",
-            payload: selectedIndex
-        });
-    }
-
 
     function nextBookable() {
         // In fact, to ensure that you have the latest state when setting new values based on old,
@@ -68,13 +70,13 @@ export default function BookablesList () {
 
         // React will pass that function the current state value and will use the return value
         // of that function as the new state value.
-        dispatch({type: "NEXT_BOOKABLE"});
+        const i = bookablesInGroup.indexOf(bookable)
+        const nextIndex = (i + 1) % bookablesInGroup.length;
+        const nextBookable = bookablesInGroup[nextIndex];
+        setBookable(nextBookable);
     }
 
-    function  toggleDetails () {
-        dispatch({type: "TOGGLE_HAS_DETAILS"});
-    }
-
+    // 4. UI
     if (error) {
         return <p>{error.message}</p>
     }
@@ -84,55 +86,37 @@ export default function BookablesList () {
     }
 
     return (
-        <Fragment>
-            <div>
-                <select value={group} onChange={changeGroup}>
-                    {groups.map(g => <option value={g} key={g}>{g}</option>)}
-                </select>
-                <ul className="bookables items-list-nav">
-                    {bookablesInGroup.map((b, i) => (
-                        <li key={b.id} className={i === bookableIndex ? "selected": null}>
-                            <button className="btn" onClick={() => changeBookable(i)}>{b.title}</button>
-                        </li>
-                    ))}
-                </ul>
-                <p>
-                    <button className="btn" onClick={nextBookable} autoFocus><FaArrowRight/><span>Next</span></button>
-                </p>
-            </div>
-            {bookable && (
-                <div className="bookable-details">
-                    <div className="item">
-                        <div className="item-header">
-                            <h2>
-                                {bookable.title}
-                            </h2>
-                            <span className="controls">
-                                <label>
-                                    <input type="checkbox" checked={hasDetails} onChange={toggleDetails}/>
-                                    Show Details
-                                </label>
-                            </span>
-                        </div>
-                        <p>{bookable.notes}</p>
-                        {hasDetails && (
-                            <div className="item-details">
-                                <h3>Availability</h3>
-                                <div className="bookable-availability">
-                                    <ul>
-                                        {bookable.days.sort().map(d => <li key={d}>{days[d]}</li>)}
-                                    </ul>
-                                    <ul>
-                                        {bookable.sessions.map(s => <li key={s}>{sessions[s]}</li>)}
-                                    </ul>
-                                </div>
-                            </div>
-                        )}
-                    </div>
-                </div>
-            )}
+        <div>
+            <select value={group} onChange={changeGroup}>
+                {groups.map(g => <option value={g} key={g}>{g}</option>)}
+            </select>
 
-        </Fragment>
+            <ul className="bookables items-list-nav">
+                {bookablesInGroup.map(b => (
+                    <li
+                        key={b.id}
+                        className={b.id === bookable.id ? "selected" : null}
+                    >
+                        <button
+                            className="btn"
+                            onClick={() => setBookable(b)}
+                        >
+                            {b.title}
+                        </button>
+                    </li>
+                ))}
+            </ul>
+            <p>
+                <button
+                    className="btn"
+                    onClick={nextBookable}
+                    autoFocus
+                >
+                    <FaArrowRight/>
+                    <span>Next</span>
+                </button>
+            </p>
+        </div>
     );
 }
 

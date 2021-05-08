@@ -6,25 +6,20 @@ export default function reducer (state, action) {
                 group: action.payload,
                 bookableIndex: 0
             };
+
         case "SET_BOOKABLE":
             return {
                 ...state,
-                bookableIndex: action.payload,
-            }
-        case "TOGGLE_HAS_DETAILS":
-            return {
-                ...state,
-                hasDetails: !state.hasDetails
+                bookableIndex: action.payload
             };
-        case "NEXT_BOOKABLE":
-            const count = state.bookables.filter(
-                b => b.group === state.group
-            ).length;
 
+        case "NEXT_BOOKABLE":
+            const count = state.bookables.filter(b => b.group === state.group).length;
             return {
                 ...state,
                 bookableIndex: (state.bookableIndex + 1) % count
             };
+
         case "FETCH_BOOKABLES_REQUEST":
             return {
                 ...state,
@@ -32,18 +27,21 @@ export default function reducer (state, action) {
                 error: false,
                 bookables: []
             };
+
         case "FETCH_BOOKABLES_SUCCESS":
             return {
                 ...state,
                 isLoading: false,
                 bookables: action.payload
             };
+
         case "FETCH_BOOKABLES_ERROR":
             return {
                 ...state,
                 isLoading: false,
                 error: action.payload
             };
+
         default:
             return state;
     }

@@ -17,3 +17,8 @@ export function getWeek (forDate, daysOffset = 0) {
         end: addDays(date, 6 - day)
     };
 }
+
+// shortISO returns the date part of the ISO-string for a given date
+export function shortISO (date) {
+    return date.toLocaleString().split("T")[0];
+}
