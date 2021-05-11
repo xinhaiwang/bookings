@@ -1,4 +1,4 @@
-import {useEffect, useRef, useState} from "react";
+import {useEffect, useState} from "react";
 import {FaArrowRight} from "react-icons/fa";
 import Spinner from "../UI/Spinner";
 
@@ -11,6 +11,9 @@ export default function BookablesList ({bookable, setBookable}) {
     const [error, setError] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
 
+    // optional chaining operator.
+    // const group = bookable && bookable.group;
+    // undefined
     const group = bookable?.group;
     const bookablesInGroup = bookables.filter(b => b.group === group);
     const groups = [...new Set(bookables.map(b => b.group))];
@@ -36,6 +39,8 @@ export default function BookablesList ({bookable, setBookable}) {
                 setError(error);
                 setIsLoading(false);
             })
+            // React doesn't trust functions passed in as props to be the same on each reander.
+            // Indeed, we sometimes might define our own updater functions rather than directly using those that useState returns.
     }, [setBookable]);
 
     // useEffect(() => {

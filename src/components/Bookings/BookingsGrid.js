@@ -1,6 +1,6 @@
 import {useEffect, useMemo, useState, Fragment} from "react";
 
-import {getGrid, transformBookings} from "./gridbuilder";
+import {getGrid, transformBookings} from "./grid-builder";
 
 import {getBookings} from "../../utils/api";
 
@@ -17,7 +17,6 @@ export default function BookingsGrid ({week, bookable, booking, setBooking}) {
 
     const {grid, sessions, dates} = useMemo(
         () => bookable ? getGrid(bookable, week.start) : {},
-        // Regenerate the grid when the bookable or week changes.
         [bookable, week.start]
     );
 
@@ -25,6 +24,8 @@ export default function BookingsGrid ({week, bookable, booking, setBooking}) {
     useEffect(() => {
         if (bookable) {
             // Use a variable to track whether the bookings data is current.
+            // When the user selects a new bookable or switches to a new week,
+            // React returns the component, and the effect runs again to load the newly selected data.
             let doUpdate = true;
 
             setBookings(null);
@@ -41,8 +42,13 @@ export default function BookingsGrid ({week, bookable, booking, setBooking}) {
                 })
                 .catch(setError);
             // Return a cleanup function to invalidate the data.
+            // The in-flight data from the previous request is no longer needed.
             // Before rerunning an effect, React calls any associated cleanup function
             // for the previous invocation of the effect.
+
+            // If the component re-renders with a new url,
+            // the cleanup function for the previous render will set the previous render's doUpdate variable to false
+            // preventing the previous then method callback from performing updates with stale data.
             return () => doUpdate =false;
         }
         // Run the effect when the bookable or week changes.
@@ -53,6 +59,7 @@ export default function BookingsGrid ({week, bookable, booking, setBooking}) {
     // and can access the booking, bookings, grid and setBookings variable.
     function cell(session, date) {
         // first check the bookings lookup, then the grid lookup.
+        // Include a period, even when working with square brackets:
         const cellData = bookings?.[session]?.[date] || grid[session][date];
         const isSelected = booking?.session === session && booking?.date === date;
 
@@ -66,13 +73,38 @@ export default function BookingsGrid ({week, bookable, booking, setBooking}) {
 
 
     // 4. UI
-
+    if (!grid) {
+        return <p>Loading...</p>
+    }
     return (
-        <div className="bookings-grid placeholder">
-            <h3>Bookings Grid</h3>
-            <p>{bookable?.title}</p>
-            <p>{week.date.toISOString()}</p>
-        </div>
-
+        <>
+          {error && (
+              <p className="bookingsError">
+                  {`There was a problem loading the bookings data (${error})`}
+              </p>
+          )}
+          <table className={bookings ? "bookingsGrid active" : "bookingsGrid"}>
+              <thead>
+                  <tr>
+                      <th>
+                          <span className="status"><Spinner/></span>
+                      </th>
+                      {dates.map(d => (
+                          <th key={d}>
+                              {(new Date(d)).toDateString()}
+                          </th>
+                      ))}
+                  </tr>
+              </thead>
+              <tbody>
+              {sessions.map(session => (
+                  <tr key={session}>
+                      <th>{session}</th>
+                      {dates.map(date => cell(session, date))}
+                  </tr>
+              ))}
+              </tbody>
+          </table>
+        </>
     );
 }

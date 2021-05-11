@@ -2,6 +2,10 @@ import {useState} from "react";
 import {days, sessions} from "../../static.json";
 
 export default function BookableDetails ({bookable}) {
+    // No other components in BookablesView care about the hasDetails state value,
+    // so it makes good sense to encapsulate it completely within BookableDetails.
+    // If a component is the sole user of a certain state,
+    // putting that state within the component seems like an obvious approach.
     const [hasDetails, setHasDetails] = useState(true);
 
     function toggleDetails () {

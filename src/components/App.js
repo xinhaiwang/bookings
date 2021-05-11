@@ -1,4 +1,5 @@
 import {BrowserRouter, Routes, Route, Link} from "react-router-dom";
+import {useState} from "react";
 
 import "../App.css";
 
@@ -9,8 +10,15 @@ import BookingsPage from "./Bookings/BookingsPage";
 import UsersPage from "./Users/UsersPage";
 import UserPicker from "./Users/UserPicker";
 
+import UserContext, {UserProvider} from "./Users/UserContext";
+
 export default function App() {
+
+    // Mange the user state with the useState hook.
+    const [user, setUser] = useState();
+
     return (
+        <UserProvider>
         <BrowserRouter>
             <div className="App">
                 <header>
@@ -36,7 +44,7 @@ export default function App() {
                             </li>
                         </ul>
                     </nav>
-                    <UserPicker/>
+                    <UserPicker />
                 </header>
 
                 <Routes>
@@ -46,5 +54,6 @@ export default function App() {
                 </Routes>
             </div>
         </BrowserRouter>
+       </UserProvider>
     );
 }

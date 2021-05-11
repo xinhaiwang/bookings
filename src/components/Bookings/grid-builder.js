@@ -3,7 +3,7 @@ import {addDays, shortISO} from "../../utils/date-wrangler"
 
 export function getGrid (bookable, startDate) {
 
-    const dates = bookable.days.sort.map(
+    const dates = bookable.days.sort().map(
         d => shortISO(addDays(startDate, d))
     );
 
@@ -41,5 +41,6 @@ export function transformBookings (bookingsArray) {
         bookings[session][date] = booking;
 
         return bookings;
+        // initial value
     }, {});
 }

@@ -1,9 +1,9 @@
-import {Fragment, useState} from "react";
+import {Fragment, useState, useCallback} from "react";
 
 import BookablesList from "./BookablesList"
 import BookableDetails from "./BookableDetails";
 
-import reducer from "./reducer";
+// import reducer from "./reducer";
 
 // const initialState = {
 //     group: "Rooms",
@@ -29,9 +29,22 @@ export default function BookablesView () {
 
     const [bookable, setBookable] = useState();
 
+    // But it's not uncommon to do some kind of validation or processing of values before updating state.
+    // We need a way to maintain the indentity of our updater function,
+    // so that it doesn't change from render to render.
+
+    // The function that useCallback returns is stable while the values in the dependency list don’t change. 
+    // When the dependencies change, React redefines, caches, and returns the function using the new dependency values. 
+    const updateBookable =  useCallback(selected => {
+        if (selected) {
+            selected.lastShown = Date.now();
+            setBookable(selected);
+        }
+    }, [])
+
     return (
         <Fragment>
-            <BookablesList bookable={bookable} setBookable={setBookable} />
+            <BookablesList bookable={bookable} setBookable={updateBookable} />
             <BookableDetails bookable={bookable}/>
         </Fragment>
     );
