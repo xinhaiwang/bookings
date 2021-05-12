@@ -3,7 +3,6 @@ import {getWeek} from "../../utils/date-wrangler";
 
 import WeekPicker from "./WeekPicker";
 import BookingsGrid from "./BookingsGrid";
-import BookingsDetails from "./BookingDetails";
 
 import weekReducer from "./weekReducer";
 import BookingDetails from "./BookingDetails";

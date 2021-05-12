@@ -1,34 +1,45 @@
 import {useState, useEffect} from "react";
 import getData from "../../utils/api";
 import Spinner from "../UI/Spinner";
+import useFetch from "../../utils/useFetch";
 
 export default function UsersList ({user, setUser}) {
-    const [error, setError] = useState(null);
-    const [isLoading, setIsLoading] = useState(true);
-    const [users, setUsers] = useState(null);
+    // const [error, setError] = useState(null);
+    // const [isLoading, setIsLoading] = useState(true);
+    // const [users, setUsers] = useState(null);
 
-    useEffect(() => {
-        getData("http://localhost:3001/users")
-            .then(data => {
-                // setUser(data[0]);
-                setUsers(data);
-                setIsLoading(false);
-            })
-            .catch(error => {
-                setError(error);
-                setIsLoading(false);
-            })
-    }, [setUser]);
+    const {data : users = [], status, error} = useFetch(
+        "http://localhost:3001/users"
+    );
 
-    if (error) {
+    // useEffect(() => {
+    //     getData("http://localhost:3001/users")
+    //         .then(data => {
+    //             // setUser(data[0]);
+    //             setUsers(data);
+    //             setIsLoading(false);
+    //         })
+    //         .catch(error => {
+    //             setError(error);
+    //             setIsLoading(false);
+    //         })
+    // }, [setUser]);
+
+    // if (error) {
+    //     return <p>{error.message}</p>
+    // }
+    //
+    // if (isLoading) {
+    //     return <p><Spinner/> Loading users...</p>
+    // }
+
+    if (status === "error") {
         return <p>{error.message}</p>
     }
 
-    if (isLoading) {
+    if (status === "loading") {
         return <p><Spinner/> Loading users...</p>
     }
-
-
 
     return (
         <ul className="users items-list-nav">

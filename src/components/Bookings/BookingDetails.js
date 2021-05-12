@@ -1,15 +1,15 @@
-import {useContext} from "react";
-
 import {FaEdit} from "react-icons/fa";
 
 import Booking from "./Booking";
 
-import UserContext from "../Users/UserContext";
+import {useUser} from "../Users/UserContext";
 
 export default function BookingDetails ({booking, bookable}) {
     // The component imports the UserContext context object and passes it to the
     // useContext hook, assigning the value the hook returns to the user variable.
-    const user = useContext(UserContext);
+    // const user = useContext(UserContext);
+
+    const [user] = useUser();
 
     const isBooker = booking && user && (booking.bookerId === user.id);
 

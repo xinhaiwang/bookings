@@ -1,15 +1,18 @@
-import {useEffect, useState} from "react";
+import {useEffect} from "react";
 import {FaArrowRight} from "react-icons/fa";
 import Spinner from "../UI/Spinner";
-
-import getData from "../../utils/api";
+import useFetch from "../../utils/useFetch";
 
 export default function BookablesList ({bookable, setBookable}) {
    // 1. Variables
    // Assign the state and dispatch props to local variables.
-    const [bookables, setBookables] = useState([]);
-    const [error, setError] = useState(false);
-    const [isLoading, setIsLoading] = useState(true);
+   //  const [bookables, setBookables] = useState([]);
+   //  const [error, setError] = useState(false);
+   //  const [isLoading, setIsLoading] = useState(true);
+
+    const {data : bookables = [], status, error} = useFetch(
+        "http://localhost:3001/bookables"
+    );
 
     // optional chaining operator.
     // const group = bookable && bookable.group;
@@ -29,19 +32,23 @@ export default function BookablesList ({bookable, setBookable}) {
 
     // 2. Effect
     useEffect(() => {
-        getData("http://localhost:3001/bookables")
-            .then(bookables => {
-                setBookable(bookables[0]);
-                setBookables(bookables);
-                setIsLoading(false);
-            })
-            .catch(error => {
-                setError(error);
-                setIsLoading(false);
-            })
-            // React doesn't trust functions passed in as props to be the same on each reander.
-            // Indeed, we sometimes might define our own updater functions rather than directly using those that useState returns.
-    }, [setBookable]);
+        setBookable(bookables[0]);
+    }, [bookables, setBookable])
+
+    // useEffect(() => {
+    //     getData("http://localhost:3001/bookables")
+    //         .then(bookables => {
+    //             setBookable(bookables[0]);
+    //             setBookables(bookables);
+    //             setIsLoading(false);
+    //         })
+    //         .catch(error => {
+    //             setError(error);
+    //             setIsLoading(false);
+    //         })
+    //         // React doesn't trust functions passed in as props to be the same on each reander.
+    //         // Indeed, we sometimes might define our own updater functions rather than directly using those that useState returns.
+    // }, [setBookable]);
 
     // useEffect(() => {
     //
@@ -82,11 +89,13 @@ export default function BookablesList ({bookable, setBookable}) {
     }
 
     // 4. UI
-    if (error) {
+    // if (error) {
+    if (status === "error") {
         return <p>{error.message}</p>
     }
 
-    if (isLoading) {
+    // if (isLoading) {
+    if (status === "loading") {
         return <p><Spinner/> Loading bookables...</p>
     }
 
